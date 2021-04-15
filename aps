@@ -78,7 +78,7 @@ do
 	mapfile -t PORT_STAT_PID < <( sudo netstat -tulpnae | grep ":${PORTS[$i]}" | awk '/tcp/{print $9}' | cut -d'/' -f1 )
 	
 	printf "$(tput smul)$(tput setaf 106)%-22s $(tput setaf 202)%-22s $(tput setaf 110)%-7s $(tput setaf 124)%-8s $(tput setaf 178)%-57s$(tput sgr0)\n" \
-		"Local-Adress" "Foreign-Adress" "Status" "PID" "Command"	
+		"Local-Adress" "Foreign-Adress" "Status" "PID" "Process"	
 
 	# Call the bubble sort function to sort the PIDs
 	bubble_sort
