@@ -1,0 +1,105 @@
+#!/bin/bash
+# vim: syntax=bash
+
+# APS - Advanced Port Scanner
+#
+# Copyright FH Dortmund
+# Author: Matti Kaupenjohann
+# Version: 1.0.0
+
+#++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++#
+# 			     EXPORTS                                   #
+#++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++#
+
+export TERM=xterm-256color
+
+#++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++#
+# 			     FUNCTIONS                                 #
+#++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++#
+
+# Function multi array bubble sort
+function bubble_sort()
+{   
+local max=${#PORT_STAT_PID[@]}
+size=${#PORT_STAT_PID[@]}
+while ((max > 0))
+do
+	local i=0
+	while ((i < max))
+	do
+		if [ "$i" != "$(($size-1))" ] #array will not be out of bound
+		then
+			if [ ${PORT_STAT_PID[$i]} \> ${PORT_STAT_PID[$((i + 1))]} ]
+			then
+				local t_pid=${PORT_STAT_PID[$i]}
+				PORT_STAT_PID[$i]=${PORT_STAT_PID[$((i + 1))]}
+				PORT_STAT_PID[$((i + 1))]=$t_pid
+				
+				local t_local=${PORT_STAT_LOCAL[$i]}
+				PORT_STAT_LOCAL[$i]=${PORT_STAT_LOCAL[$((i + 1))]}
+				PORT_STAT_LOCAL[$((i + 1))]=$t_local
+
+				local t_foreign=${PORT_STAT_FOREIGN[$i]}
+				PORT_STAT_FOREIGN[$i]=${PORT_STAT_FOREIGN[$((i + 1))]}
+				PORT_STAT_FOREIGN[$((i + 1))]=$t_foreign
+				
+				local t_status=${PORT_STAT_STATUS[$i]}
+				PORT_STAT_STATUS[$i]=${PORT_STAT_STATUS[$((i + 1))]}
+				PORT_STAT_STATUS[$((i + 1))]=$t_status
+
+
+			fi
+		fi
+		((i += 1))
+	done
+	((max -= 1))
+done
+}
+
+#++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++#
+# 			     SCRIPT                                    #
+#++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++#
+
+# Read the ports
+mapfile -t PORTS < <( nmap -p 1-65535 localhost | awk '/open/{print $1}' | cut -d'/' -f1 )
+#PORTS=$( nmap -p 1-65535 localhost | awk '/open/{print $1}' | cut -d'/' -f1 )
+
+# Read Services
+mapfile -t SERVICES < <( nmap -p 1-65535 localhost | awk '/open/{print $3}' )
+#SERVICES=$( nmap -p 1-65535 localhost | awk '/open/{print $3}' )
+
+# Cycle over all ports
+for ((i = 0; i < ${#PORTS[@]}; i++))
+do
+	printf "$(tput setab 235)$(tput setaf 166)%-120s$(tput sgr0)\n" "PORT SCANNED: ${PORTS[$i]} :: with Service: ${SERVICES[$i]}"
+	mapfile -t PORT_STAT_LOCAL < <( sudo netstat -tulpnae | grep ":${PORTS[$i]}" | awk '/tcp/{print $4}' )
+	mapfile -t PORT_STAT_FOREIGN < <( sudo netstat -tulpnae | grep ":${PORTS[$i]}" | awk '/tcp/{print $5}' )
+	mapfile -t PORT_STAT_STATUS < <( sudo netstat -tulpnae | grep ":${PORTS[$i]}" | awk '/tcp/{print $7}' )
+	mapfile -t PORT_STAT_PID < <( sudo netstat -tulpnae | grep ":${PORTS[$i]}" | awk '/tcp/{print $9}' | cut -d'/' -f1 )
+	
+	printf "$(tput smul)$(tput setaf 106)%-22s $(tput setaf 202)%-22s $(tput setaf 110)%-7s $(tput setaf 124)%-8s $(tput setaf 178)%-57s$(tput sgr0)\n" \
+		"Local-Adress" "Foreign-Adress" "Status" "PID" "Command"	
+
+	# Call the bubble sort function to sort the PIDs
+	bubble_sort
+	
+	# Cycle over all possible connections
+	for ((j = 0; j < ${#PORT_STAT_LOCAL[@]}; j++))
+	do
+		mapfile -t COMMAND < <( ps -p ${PORT_STAT_PID[$j]} -o command | awk '!/COMMAND/' ) #| cut -b1-30)
+		
+		if [ ${#COMMAND} -gt 57 ]
+		then
+			COMMAND=$( echo "$COMMAND" | awk '{ print substr($0, 1, 54) "..." }' )
+			
+		fi
+
+		printf "$(tput setaf 106)%-22s $(tput setaf 202)%-22s $(tput setaf 110)%-7s $(tput setaf 124)%-8s $(tput setaf 178)%-57s$(tput sgr0)\n" \
+                	"${PORT_STAT_LOCAL[$j]}" "${PORT_STAT_FOREIGN[$j]}" "${PORT_STAT_STATUS[$j]}" "${PORT_STAT_PID[$j]}" "$COMMAND"
+	done
+done
+
+
+#sudo netstat -tulpnae | grep ${ports_array[0]}
+
+
