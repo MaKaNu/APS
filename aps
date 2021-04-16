@@ -30,11 +30,34 @@
 export TERM=xterm-256color
 
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++#
+#  		           cleanup and error                                 #
+#++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++#
+
+tempfiles=( )
+cleanup() {
+        rm -f "${tempfiles[@]}"
+}
+trap cleanup 0
+
+error() {
+  local parent_lineno="$1"
+  local message="$2"
+  local code="${3:-1}"
+  if [[ -n "$message" ]] ; then
+    echo "Error on or near line ${parent_lineno}: ${message}; exiting with status ${code}"
+  else
+    echo "Error on or near line ${parent_lineno}; exiting with status ${code}"
+  fi
+  exit "${code}"
+}
+trap 'error ${LINENO}' ERR
+
+#++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++#
 # 			     FUNCTIONS                                       #
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++#
 
 # Function multi array bubble sort
-function bubble_sort()
+bubble_sort()
 {   
 local max=${#PORT_STAT_PID[@]}
 size=${#PORT_STAT_PID[@]}
@@ -70,6 +93,7 @@ do
 	done
 	((max -= 1))
 done
+return 0
 }
 
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++#
