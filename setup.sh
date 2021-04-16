@@ -8,6 +8,16 @@
 # Author: Matti Kaupenjohann
 # Version: 1.0.0
 
+tempfiles=( )
+cleanup() {
+	$DIALOG --infobox "Removing temp-files ..." 3 30 
+	rm -f "${tempfiles[@]}"
+	sleep 2
+	$DIALOG --clear
+	clear
+}
+trap cleanup 0
+
 error() {
   local parent_lineno="$1"
   local message="$2"
@@ -21,10 +31,23 @@ error() {
 }
 trap 'error ${LINENO}' ERR
 
+cp_script() {
+	echo "# Copied script to destination:"
+	cp -rv aps "$INSTALL_PATH"
+}
+
+chmod_script() {
+	echo "# Changed rights for script:"
+	chmod -v 755 "$INSTALL_PATH"
+}
+
 main(){
 if ! [ $(id -u) = 0 ]; then
    	error ${LINENO} "The script need to be run as root." 1
 fi
+
+temp_setup="$(mktemp /tmp/aps_setup.XXXXX --suffix=.tmp)"
+tempfiles+=( "$temp_setup" )
 
 MSG="
    INSTALLING \\ UPDATING  
@@ -38,22 +61,32 @@ MSG="
  The Advanced Port Scanner!
 "
 
-dialog --no-collapse --ok-label "CONTINUE" --msgbox "$MSG" 0 0
-dialog --clear    # Dialog-Bildschirm löschen
+DIALOG=dialog 
+$DIALOG --no-collapse --ok-label "CONTINUE" --msgbox "$MSG" 0 0
+$DIALOG --clear    # Dialog-screen reset
+RESPONSE=1
+while [ $RESPONSE -eq 1 ]
+do
+INSTALL_PATH=`$DIALOG --inputbox "Enter Custom Install Path or press Enter to Continue " 0 0 \
+		"/usr/local/bin/aps" 3>&1 1>&2 2>&3`
+$DIALOG --clear
+$DIALOG --yesno "Do you want to use $INSTALL_PATH as install path?" 0 0
+RESPONSE=$?
+$DIALOG --clear
+done
+
 if [ -f aps ]; then
-	DIALOG=dialog 
-		(
-		echo "50" ; cp -uv aps /usr/local/bin/aps;
-		echo "XXX" ; echo "Copy Script"; echo "XXX"
-		echo "100" ; chmod -c 755 /usr/local/bin/aps;
-		echo "XXX" ; echo "Change rights"; echo "XXX"
-		)
-	$DIALOG --title "Installation" --gauge "Start installation" 8 30
+	cp_script >> $temp_setup
+	$DIALOG --infobox "$(cat $temp_setup)" 10 80
+	sleep 1
+	chmod_script >> $temp_setup
+	$DIALOG --infobox "$(cat $temp_setup)" 10 80
+	sleep 1
+	$DIALOG --msgbox "Installation Complete!" 0 0
+	
 else
 	error $(LINENO) "Script aps not found. Are you calling this setup script from correct dir?" 2
 fi
-dialog --msgbox "Installation Complete!" 0 0
-clear
 }
 
 
