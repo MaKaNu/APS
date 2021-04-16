@@ -36,7 +36,7 @@ sudo aps
 ```
 and the result could look like this (blurred additional entries for obvious reasons):
 
-![result](/imgs/reuslt.png)
+![result](https://raw.githubusercontent.com/MaKaNu/APS/main/imgs/result.png)
 
 ### What is this mysterious script doing and why do I need it?
 - read out all ports of an local ```nmap -p 1-65535 localhost``` scan
@@ -48,7 +48,7 @@ and the result could look like this (blurred additional entries for obvious reas
 This tool helps you to see which actual service is running on your ports
 
 #### TODO
-- [] lot of things
-- [] figure out bugs/and solution for them (There are a few but didn't found the time for issues)
-- [] refactor for better error handling
-- [] CI/CD Pipeline (with github actions?)
+- [ ] lot of things
+- [ ] figure out bugs/and solution for them (There are a few but didn't found the time for issues)
+- [ ] refactor for better error handling
+- [ ] CI/CD Pipeline (with github actions?)
