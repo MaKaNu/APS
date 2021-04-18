@@ -127,20 +127,22 @@ do
 	# Call the bubble sort function to sort the PIDs
 	bubble_sort
 	
+	
 	# Cycle over all possible connections
 	for ((j = 0; j < ${#PORT_STAT_LOCAL[@]}; j++))
 	do
-		mapfile -t COMMAND < <( ps -p "${PORT_STAT_PID[$j]}" -o command | awk '!/COMMAND/' )
-		
-		if [ ${#COMMAND} -gt 54 ]
-		then
-			PROCESS=$( echo "${COMMAND[@]}" | awk '{ print substr($0, 1, 51) "..." }' )
-		else
-			PROCESS="${COMMAND[*]}"
+		if [ "${PORT_STAT_STATUS[$j]}" != "TIME_WAIT" ]; then
+			mapfile -t COMMAND < <( ps -p "${PORT_STAT_PID[$j]}" -o command | awk '!/COMMAND/' )
+			
+			if [ ${#COMMAND} -gt 54 ]
+			then
+				PROCESS=$( echo "${COMMAND[@]}" | awk '{ print substr($0, 1, 51) "..." }' )
+			else
+				PROCESS="${COMMAND[*]}"
+			fi
+				printf "$(tput setaf 106)%-22s $(tput setaf 202)%-22s $(tput setaf 110)%-10s $(tput setaf 124)%-8s $(tput setaf 178)%-54s$(tput sgr0)\n" \
+					"${PORT_STAT_LOCAL[$j]}" "${PORT_STAT_FOREIGN[$j]}" "${PORT_STAT_STATUS[$j]}" "${PORT_STAT_PID[$j]}" "$PROCESS"
 		fi
-
-		printf "$(tput setaf 106)%-22s $(tput setaf 202)%-22s $(tput setaf 110)%-10s $(tput setaf 124)%-8s $(tput setaf 178)%-54s$(tput sgr0)\n" \
-                	"${PORT_STAT_LOCAL[$j]}" "${PORT_STAT_FOREIGN[$j]}" "${PORT_STAT_STATUS[$j]}" "${PORT_STAT_PID[$j]}" "$PROCESS"
 	done
 done
 
