@@ -66,9 +66,9 @@ do
 	local i=0
 	while ((i < max))
 	do
-		if [ "$i" != "$(($size-1))" ] #array will not be out of bound
+		if [ "$i" != $(("$size"-1)) ] #array will not be out of bound
 		then
-			if [ ${PORT_STAT_PID[$i]} \> ${PORT_STAT_PID[$((i + 1))]} ]
+			if [ "${PORT_STAT_PID[$i]}" \> "${PORT_STAT_PID[$((i + 1))]}" ]
 			then
 				local t_pid=${PORT_STAT_PID[$i]}
 				PORT_STAT_PID[$i]=${PORT_STAT_PID[$((i + 1))]}
@@ -100,7 +100,7 @@ return 0
 #				     SCRIPT                                  #
 #++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++#
 
-if ! [ $(id -u) = 0 ]; then
+if ! [ "$(id -u)" = 0 ]; then
 	error ${LINENO} "The script need to be run as root." 1
 fi
 
