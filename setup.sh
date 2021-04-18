@@ -58,7 +58,7 @@ chmod_script() {
 }
 
 main(){
-if ! [ $(id -u) = 0 ]; then
+if ! [ "$(id -u)" = 0 ]; then
    	error ${LINENO} "The script need to be run as root." 1
 fi
 
@@ -83,8 +83,8 @@ $DIALOG --clear    # Dialog-screen reset
 RESPONSE=1
 while [ $RESPONSE -eq 1 ]
 do
-INSTALL_PATH=`$DIALOG --inputbox "Enter Custom Install Path or press Enter to Continue " 0 0 \
-		"/usr/local/bin/aps" 3>&1 1>&2 2>&3`
+INSTALL_PATH=$($DIALOG --inputbox "Enter Custom Install Path or press Enter to Continue " 0 0 \
+		"/usr/local/bin/aps" 3>&1 1>&2 2>&3)
 $DIALOG --clear
 $DIALOG --yesno "Do you want to use $INSTALL_PATH as install path?" 0 0
 RESPONSE=$?
@@ -92,16 +92,16 @@ $DIALOG --clear
 done
 
 if [ -f aps ]; then
-	cp_script >> $temp_setup
-	$DIALOG --infobox "$(cat $temp_setup)" 10 80
+	cp_script >> "$temp_setup"
+	$DIALOG --infobox "$(cat "$temp_setup")" 10 80
 	sleep 1
-	chmod_script >> $temp_setup
-	$DIALOG --infobox "$(cat $temp_setup)" 10 80
+	chmod_script >> "$temp_setup"
+	$DIALOG --infobox "$(cat "$temp_setup")" 10 80
 	sleep 1
 	$DIALOG --msgbox "Installation Complete!" 0 0
 	
 else
-	error $(LINENO) "Script aps not found. Are you calling this setup script from correct dir?" 2
+	error "$(LINENO)" "Script aps not found. Are you calling this setup script from correct dir?" 2
 fi
 }
 
