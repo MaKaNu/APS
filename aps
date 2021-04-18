@@ -116,12 +116,12 @@ mapfile -t SERVICES < <( nmap -p 1-65535 localhost | awk '/open/{print $3}' )
 for ((i = 0; i < ${#PORTS[@]}; i++))
 do
 	printf "$(tput setab 235)$(tput setaf 166)%-120s$(tput sgr0)\n" "PORT SCANNED: ${PORTS[$i]} :: with Service: ${SERVICES[$i]}"
-	mapfile -t PORT_STAT_LOCAL < <( netstat -tulpnae | grep ":${PORTS[$i]}" | awk '/tcp/{print $4}' )
-	mapfile -t PORT_STAT_FOREIGN < <( netstat -tulpnae | grep ":${PORTS[$i]}" | awk '/tcp/{print $5}' )
-	mapfile -t PORT_STAT_STATUS < <( netstat -tulpnae | grep ":${PORTS[$i]}" | awk '/tcp/{print $7}' )
-	mapfile -t PORT_STAT_PID < <( netstat -tulpnae | grep ":${PORTS[$i]}" | awk '/tcp/{print $9}' | cut -d'/' -f1 )
+	mapfile -t PORT_STAT_LOCAL < <( netstat -tpna | awk -v port=":${PORTS[$i]}$" '($4 ~port || $5 ~port) && $1 ~ /tcp/{print $4}' )
+	mapfile -t PORT_STAT_FOREIGN < <( netstat -tpna | awk -v port=":${PORTS[$i]}$" '($4 ~port || $5 ~port) && $1 ~ /tcp/{print $5}' )
+	mapfile -t PORT_STAT_STATUS < <( netstat -tpna | awk -v port=":${PORTS[$i]}$" '($4 ~port || $5 ~port) && $1 ~ /tcp/{print $6}' )
+	mapfile -t PORT_STAT_PID < <( netstat -tpna | awk -v port=":${PORTS[$i]}$" '($4 ~port || $5 ~port) && $1 ~ /tcp/{print $7}' | cut -d'/' -f1 )
 	
-	printf "$(tput smul)$(tput setaf 106)%-22s $(tput setaf 202)%-22s $(tput setaf 110)%-7s $(tput setaf 124)%-8s $(tput setaf 178)%-57s$(tput sgr0)\n" \
+	printf "$(tput smul)$(tput setaf 106)%-22s $(tput setaf 202)%-22s $(tput setaf 110)%-10s $(tput setaf 124)%-8s $(tput setaf 178)%-54s$(tput sgr0)\n" \
 		"Local-Adress" "Foreign-Adress" "Status" "PID" "Process"	
 
 	# Call the bubble sort function to sort the PIDs
@@ -132,18 +132,17 @@ do
 	do
 		mapfile -t COMMAND < <( ps -p "${PORT_STAT_PID[$j]}" -o command | awk '!/COMMAND/' )
 		
-		if [ ${#COMMAND} -gt 57 ]
+		if [ ${#COMMAND} -gt 54 ]
 		then
-			COMMAND=$( echo "$COMMAND" | awk '{ print substr($0, 1, 54) "..." }' )
-			
+			PROCESS=$( echo "${COMMAND[@]}" | awk '{ print substr($0, 1, 51) "..." }' )
+		else
+			PROCESS="${COMMAND[*]}"
 		fi
 
-		printf "$(tput setaf 106)%-22s $(tput setaf 202)%-22s $(tput setaf 110)%-7s $(tput setaf 124)%-8s $(tput setaf 178)%-57s$(tput sgr0)\n" \
-                	"${PORT_STAT_LOCAL[$j]}" "${PORT_STAT_FOREIGN[$j]}" "${PORT_STAT_STATUS[$j]}" "${PORT_STAT_PID[$j]}" "$COMMAND"
+		printf "$(tput setaf 106)%-22s $(tput setaf 202)%-22s $(tput setaf 110)%-10s $(tput setaf 124)%-8s $(tput setaf 178)%-54s$(tput sgr0)\n" \
+                	"${PORT_STAT_LOCAL[$j]}" "${PORT_STAT_FOREIGN[$j]}" "${PORT_STAT_STATUS[$j]}" "${PORT_STAT_PID[$j]}" "$PROCESS"
 	done
 done
 
 
 #sudo netstat -tulpnae | grep ${ports_array[0]}
-
-
