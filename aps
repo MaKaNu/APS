@@ -131,7 +131,7 @@ do
 	# Cycle over all possible connections
 	for ((j = 0; j < ${#PORT_STAT_LOCAL[@]}; j++))
 	do
-		if [ "${PORT_STAT_STATUS[$j]}" != "TIME_WAIT" ]; then
+		if [ "${PORT_STAT_STATUS[$j]}" != "TIME_WAIT" ] && [ "${PORT_STAT_STATUS[$j]}" != "FIN_WAIT2" ]; then
 			mapfile -t COMMAND < <( ps -p "${PORT_STAT_PID[$j]}" -o command | awk '!/COMMAND/' )
 			
 			if [ ${#COMMAND} -gt 54 ]
