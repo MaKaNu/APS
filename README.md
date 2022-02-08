@@ -11,7 +11,7 @@ APS - Advandced Port Scanner
 
 APS is a small script to combine in a short time the information of multiple network diagnostic tools.
 
-## Requierements
+## Requirements
 - bash4
 - dialog (optional for setup.sh)
 
